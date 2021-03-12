@@ -34,14 +34,6 @@ def seq2sent(seq, tokenizer):
     return ' '.join(sent)
 
 
-def load_ast(file_path):
-    _data = []
-    with open(file_path, 'r') as f:
-        for line in f.readlines():
-            _data.append(eval(line))
-    return _data
-
-
 class BatchGen(keras.utils.Sequence):
     def __init__(self, config, data_name, code_data, ast_data, nl_data, edges, vocab):
         self.code_data = code_data
@@ -68,11 +60,10 @@ class BatchGen(keras.utils.Sequence):
         start_id = idx * self.batch_size
         end_id = self.batch_size * (idx + 1)
         batch_ids = self.ids[start:end]
-        return
+        return self.make_batch(batch_ids)
 
     def on_epoch_end(self):
-        random.shuffle(self.allfids)
-
+        random.shuffle(self.ids)
 
     def make_batch(self, batch_ids):
         import keras.utils
