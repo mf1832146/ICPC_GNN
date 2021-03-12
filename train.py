@@ -10,8 +10,8 @@ import tensorflow as tf
 from keras.callbacks import ModelCheckpoint, Callback
 import keras.backend as K
 from utils.model import create_model
-from utils.myutils import batch_gen, init_tf
-
+from utils.myutils import BatchGen, init_tf, load_data
+from vocab import Vocab
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
@@ -35,15 +35,25 @@ if __name__ == '__main__':
     # set gpu here
     init_tf(gpu)
 
+    data_dir = '../data_set/py'
+
+    # load vocab
+    vocab = Vocab(data_dir=data_dir)
+    vocab.load_vocab()
+
+    # load data
+    train_code_data, train_ast_data, train_edges, train_nl = load_data(data_dir, 'train')
+    val_code_data, val_ast_data, val_edges, val_nl = load_data(data_dir, 'dev')
+
     config = dict()
     # gnn hops
     config['asthops'] = asthops
     # code vocab size
-    config['tdatvocabsize'] = code_vocab_size
+    config['tdatvocabsize'] = len(vocab.code2index)
     # comment vocab size
-    config['comvocabsize'] = comment_vocab_size
+    config['comvocabsize'] = len(vocab.nl2index)
     # ast vocab size
-    config['smlvocabsize'] = ast_vocab_size
+    config['smlvocabsize'] = len(vocab.ast2index)
 
     # set sequence length for our input
     # code seq len
@@ -58,14 +68,14 @@ if __name__ == '__main__':
 
     # Load data
     # model parameters
-    steps = int(len(seqdata['ctrain'])/batch_size)+1
-    valsteps = int(len(seqdata['cval'])/batch_size)+1
+    steps = int(len(train_code_data)/batch_size)+1
+    valsteps = int(len(val_code_data)/batch_size)+1
 
 
     # Print information
-    print('tdatvocabsize {}'.format(code_vocab_size))
-    print('comvocabsize {}'.format(comment_vocab_size))
-    print('smlvocabsize {}'.format(ast_vocab_size))
+    print('tdatvocabsize {}'.format(config['tdatvocabsize']))
+    print('comvocabsize {}'.format( config['comvocabsize']))
+    print('smlvocabsize {}'.format(config['smlvocabsize']))
     print('batch size {}'.format(batch_size))
     print('steps {}'.format(steps))
     print('training data size {}'.format(steps*batch_size))
@@ -78,11 +88,11 @@ if __name__ == '__main__':
     print(model.summary())
 
     # set up data generators
-    gen = batch_gen(seqdata, 'train', config, nodedata=node_data, edgedata=edges)
+    gen = BatchGen(config, 'train', train_code_data, train_ast_data, train_nl, train_edges, vocab)
 
     checkpoint = ModelCheckpoint(outdir + "/models/" + modeltype + "_E{epoch:02d}.h5")
 
-    valgen = batch_gen(seqdata, 'val', config, nodedata=seqdata['sval_nodes'], edgedata=seqdata['sval_edges'])
+    valgen = BatchGen(config, 'val', val_code_data, val_ast_data, val_nl, val_edges, vocab)
     callbacks = [checkpoint]
 
     model.fit_generator(gen, steps_per_epoch=steps, epochs=epochs, verbose=1, max_queue_size=4,

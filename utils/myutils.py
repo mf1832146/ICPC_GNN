@@ -1,7 +1,6 @@
 import random
 import sys
 from timeit import default_timer as timer
-import random
 import keras
 import numpy as np
 
@@ -34,6 +33,39 @@ def seq2sent(seq, tokenizer):
     return ' '.join(sent)
 
 
+def load_ast(file_path):
+    _data = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            _data.append(eval(line))
+    return _data
+
+
+def load_nl(file_path):
+    data_ = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            data_.append(line.split())
+    return data_
+
+
+def load_matrices(file_path):
+    print('loading matrices...')
+    matrices = np.load(file_path, allow_pickle=True)
+    return matrices
+
+
+def load_data(data_dir, data_set_name):
+    print('loading ' + data_set_name + ' data...')
+    ast_data = load_ast(data_dir + '/' + data_set_name + '/' + 'root_first.seq')
+    matrices_data = load_matrices(data_dir + '/' + data_set_name + '/' + 'matrices.npz')
+    edges_data = matrices_data['parent']
+    nl_data = load_nl(data_dir + '/' + data_set_name + '/' + 'nl.original')
+    code_data = load_nl(data_dir + '/' + data_set_name + '/' + 'code.token')
+
+    return code_data, ast_data, edges_data, nl_data
+
+
 class BatchGen(keras.utils.Sequence):
     def __init__(self, config, data_name, code_data, ast_data, nl_data, edges, vocab):
         self.code_data = code_data
@@ -41,7 +73,7 @@ class BatchGen(keras.utils.Sequence):
         self.nl_data = nl_data
         self.edges = edges
         self.data_name = data_name
-        self.ids = range(len(self.code_data))
+        self.ids = list(range(len(self.code_data)))
         self.vocab = vocab
 
         self.batch_size = config['batch_size']
@@ -51,7 +83,7 @@ class BatchGen(keras.utils.Sequence):
 
         self.nl_vocab_size = len(self.vocab.nl2index)
 
-        random.random(self.ids)
+        random.shuffle(self.ids)
 
     def __len__(self):
         return int(np.ceil(len(self.ids) / self.batch_size))
