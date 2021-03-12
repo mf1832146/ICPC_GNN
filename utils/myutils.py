@@ -59,7 +59,7 @@ class BatchGen(keras.utils.Sequence):
     def __getitem__(self, idx):
         start_id = idx * self.batch_size
         end_id = self.batch_size * (idx + 1)
-        batch_ids = self.ids[start:end]
+        batch_ids = self.ids[start_id: end_id]
         return self.make_batch(batch_ids)
 
     def on_epoch_end(self):
