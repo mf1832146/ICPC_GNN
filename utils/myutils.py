@@ -117,6 +117,7 @@ class BatchGen(keras.utils.Sequence):
             code_seq = self.code_data[_id]
             nl_seq = self.nl_data[_id]
             ast_seq = self.ast_data[_id]
+            edge_id = self.edges[_id]
 
             code_seq = code_seq[:self.max_code_len]
             ast_seq = ast_seq[:self.max_ast_len]
@@ -131,6 +132,11 @@ class BatchGen(keras.utils.Sequence):
             nl_seq_ids = [self.vocab.nl2index[x] if x in self.vocab.nl2index else self.vocab.nl2index['<UNK>'] for x in nl_seq]
 
             edge = np.zeros((self.max_ast_len, self.max_ast_len), dtype='int32')
+            for k in edge_id.keys():
+                distance = edge_id.get(k)
+                if distance > 1:
+                    continue
+                edge[k[0]][k[1]] = 1
 
             if self.data_name == 'test':
                 batch_data[_id] = [code_seq_ids, nl_seq_ids, ast_seq_ids, edge]
