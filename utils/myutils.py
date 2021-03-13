@@ -3,7 +3,7 @@ import sys
 from timeit import default_timer as timer
 import keras
 import numpy as np
-
+import tensorflow as tf
 # do NOT import keras in this header area, it will break predict.py
 # instead, import keras as needed in each function
 
@@ -15,6 +15,10 @@ def init_tf(gpu):
     import os
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def index2word(tok):
@@ -78,8 +82,8 @@ class BatchGen(keras.utils.Sequence):
 
         self.batch_size = config['batch_size']
         self.max_ast_len = config['maxastnodes']
-        self.max_nl_len = config['comvocabsize']
-        self.max_code_len = config['tdatvocabsize']
+        self.max_nl_len = config['comlen']
+        self.max_code_len = config['tdatlen']
 
         self.nl_vocab_size = len(self.vocab.nl2index)
 
@@ -116,6 +120,7 @@ class BatchGen(keras.utils.Sequence):
 
             code_seq = code_seq[:self.max_code_len]
             ast_seq = ast_seq[:self.max_ast_len]
+            nl_seq = nl_seq[:self.max_nl_len-2]
             nl_seq = ['<SOS>'] + nl_seq + ['<EOS>']
 
             ast_seq = ast_seq + ['<PAD>' for i in range(self.max_ast_len - len(ast_seq))]
@@ -130,7 +135,7 @@ class BatchGen(keras.utils.Sequence):
             if self.data_name == 'test':
                 batch_data[_id] = [code_seq_ids, nl_seq_ids, ast_seq_ids, edge]
             else:
-                for i in range(1, len(nl_seq_ids)):
+                for i in range(1, len(nl_seq_ids)-1):
                     batch_code_seq.append(code_seq_ids)
                     batch_ast_seq.append(ast_seq_ids)
                     batch_edges.append(edge)
@@ -140,7 +145,7 @@ class BatchGen(keras.utils.Sequence):
 
                     target = keras.utils.to_categorical(target, num_classes=self.nl_vocab_size)
 
-                    input_nl = input_nl + [self.vocab.PAD for i in range(len(nl_seq_ids) - 1 - i)]
+                    input_nl = input_nl + [self.vocab.PAD for i in range(self.max_nl_len - len(input_nl))]
 
                     batch_nl_seq.append(input_nl)
                     batch_target.append(np.asarray(target))

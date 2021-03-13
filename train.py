@@ -16,9 +16,9 @@ from vocab import Vocab
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--gpu', type=str, help='0 or 1', default='0')
-    parser.add_argument('--batch-size', dest='batch_size', type=int, default=200)
+    parser.add_argument('--batch-size', dest='batch_size', type=int, default=4)
     parser.add_argument('--epochs', dest='epochs', type=int, default=10)
-    parser.add_argument('--modeltype', dest='modeltype', type=str, default='codegnngru')
+    parser.add_argument('--modeltype', dest='modeltype', type=str, default='codegnnbilstm')
     parser.add_argument('--data', dest='dataprep', type=str, default='../data')
     parser.add_argument('--outdir', dest='outdir', type=str, default='./modelout')
     parser.add_argument('--asthops', dest='hops', type=int, default=2)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # ast seq len
     config['maxastnodes'] = 100
     # comment seq len
-    config['comlen'] = 50
+    config['comlen'] = 20
 
     config['batch_size'] = batch_size
     config['epochs'] = epochs
