@@ -119,6 +119,7 @@ class BatchGen(keras.utils.Sequence):
             nl_seq = ['<SOS>'] + nl_seq + ['<EOS>']
 
             ast_seq = ast_seq + ['<PAD>' for i in range(self.max_ast_len - len(ast_seq))]
+            code_seq = code_seq + ['<PAD>' for i in range(self.max_code_len - len(code_seq))]
 
             code_seq_ids = [self.vocab.code2index[x] if x in self.vocab.code2index else self.vocab.code2index['<UNK>'] for x in code_seq]
             ast_seq_ids = [self.vocab.ast2index[x] if x in self.vocab.ast2index else self.vocab.ast2index['<UNK>'] for x in ast_seq]

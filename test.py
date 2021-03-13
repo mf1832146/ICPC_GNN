@@ -2,5 +2,6 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    for i in range(1):
-        print(i)
+    a = [1, 2, 3]
+    b = [2, 3, 4]
+    print(np.asarray([a,b]))
