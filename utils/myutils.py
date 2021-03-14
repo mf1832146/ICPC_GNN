@@ -124,6 +124,7 @@ class BatchGen(keras.utils.Sequence):
             if not self.data_name == 'test':
                 nl_seq = nl_seq[:self.max_nl_len-2]
                 nl_seq = ['<SOS>'] + nl_seq + ['<EOS>']
+                nl_seq_len = len(nl_seq)
                 nl_seq_ids = [self.vocab.nl2index[x] if x in self.vocab.nl2index else self.vocab.nl2index['<UNK>'] for x
                               in nl_seq]
             else:
@@ -144,7 +145,7 @@ class BatchGen(keras.utils.Sequence):
             if self.data_name == 'test':
                 batch_data[_id] = [code_seq_ids, nl_seq_ids, ast_seq_ids, edge]
             else:
-                for i in range(1, len(nl_seq_ids)-1):
+                for i in range(1, nl_seq_len-1):
                     batch_code_seq.append(code_seq_ids)
                     batch_ast_seq.append(ast_seq_ids)
                     batch_edges.append(edge)
