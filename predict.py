@@ -16,7 +16,7 @@ from models.custom.graphlayer import GCNLayer
 from vocab import Vocab
 
 
-def gen_pred(model, data, comstok, comlen, batchsize, strat='greedy'):
+def gen_pred(model, data, comstok, comlen, batchsize):
     # right now, only greedy search is supported...
     tdats, coms, wsmlnodes, wedge_1 = zip(*data.values())
     tdats = np.array(tdats)
@@ -93,11 +93,12 @@ if __name__ == '__main__':
     # ast seq len
     config['maxastnodes'] = 100
     # comment seq len
-    config['comlen'] = 20
+    config['comlen'] = 30
+    config['batch_size'] = batchsize
 
     config, _ = create_model(modeltype, config)
     print("MODEL LOADED")
-    model = keras.models.load_model(modelfile, custom_objects={"tf": tf, "keras": keras, 'AlexGraphLayer': GCNLayer})
+    model = keras.models.load_model(modelfile, custom_objects={"tf": tf, "keras": keras, 'GCNLayer': GCNLayer})
 
     config['batch_maker'] = 'graph_multi_1'
 
@@ -122,7 +123,7 @@ if __name__ == '__main__':
         bg = BatchGen(config, 'test', test_code_data, test_ast_data, input_nl_data, test_edges, vocab)
         batch = bg.make_batch(fid_set)
 
-        batch_results = gen_pred(model, batch, vocab.nl2index, config['comlen'], batchsize, config, strat='greedy')
+        batch_results = gen_pred(model, batch, vocab.nl2index, config['comlen'], len(fid_set))
 
         for key, val in batch_results.items():
             outf.write("{}\t{}\n".format(key, val))

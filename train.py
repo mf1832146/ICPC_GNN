@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # ast seq len
     config['maxastnodes'] = 100
     # comment seq len
-    config['comlen'] = 20
+    config['comlen'] = 30
 
     config['batch_size'] = batch_size
     config['epochs'] = epochs

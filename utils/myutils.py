@@ -23,7 +23,7 @@ def init_tf(gpu):
 
 def index2word(tok):
     i2w = {}
-    for word, index in tok.w2i.items():
+    for word, index in tok.items():
         i2w[index] = word
     return i2w
 
@@ -121,15 +121,18 @@ class BatchGen(keras.utils.Sequence):
 
             code_seq = code_seq[:self.max_code_len]
             ast_seq = ast_seq[:self.max_ast_len]
-            nl_seq = nl_seq[:self.max_nl_len-2]
-            nl_seq = ['<SOS>'] + nl_seq + ['<EOS>']
-
+            if not self.data_name == 'test':
+                nl_seq = nl_seq[:self.max_nl_len-2]
+                nl_seq = ['<SOS>'] + nl_seq + ['<EOS>']
+                nl_seq_ids = [self.vocab.nl2index[x] if x in self.vocab.nl2index else self.vocab.nl2index['<UNK>'] for x
+                              in nl_seq]
+            else:
+                nl_seq_ids = nl_seq
             ast_seq = ast_seq + ['<PAD>' for i in range(self.max_ast_len - len(ast_seq))]
             code_seq = code_seq + ['<PAD>' for i in range(self.max_code_len - len(code_seq))]
 
             code_seq_ids = [self.vocab.code2index[x] if x in self.vocab.code2index else self.vocab.code2index['<UNK>'] for x in code_seq]
             ast_seq_ids = [self.vocab.ast2index[x] if x in self.vocab.ast2index else self.vocab.ast2index['<UNK>'] for x in ast_seq]
-            nl_seq_ids = [self.vocab.nl2index[x] if x in self.vocab.nl2index else self.vocab.nl2index['<UNK>'] for x in nl_seq]
 
             edge = np.zeros((self.max_ast_len, self.max_ast_len), dtype='int32')
             for k in edge_id.keys():
