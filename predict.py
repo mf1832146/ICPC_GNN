@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # ast seq len
     config['maxastnodes'] = 100
     # comment seq len
-    config['comlen'] = 30
+    config['comlen'] = 50
     config['batch_size'] = batchsize
 
     config, _ = create_model(modeltype, config)
