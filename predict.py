@@ -47,6 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--outdir', dest='outdir', type=str, default='modelout/')
     parser.add_argument('--batch-size', dest='batchsize', type=int, default=30)
     parser.add_argument('--outfile', dest='outfile', type=str, default=None)
+    parser.add_argument('--lang', default='py')
 
     args = parser.parse_args()
 
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu
 
-    data_dir = '../data_set/py'
+    data_dir = '../data_set/' + args.lang
 
     # load vocab
     vocab = Vocab(data_dir=data_dir)
