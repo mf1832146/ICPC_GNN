@@ -7,13 +7,15 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from utils.myutils import BatchGen, init_tf, seq2sent, load_data
+from metrices.compute_scores import eval_accuracies
+from utils.myutils import BatchGen, init_tf, load_data
 import keras
 import keras.backend as K
 from utils.model import create_model
 from timeit import default_timer as timer
 from models.custom.graphlayer import GCNLayer
 from vocab import Vocab
+import json
 
 
 def gen_pred(model, data, comstok, comlen, batchsize):
@@ -30,11 +32,7 @@ def gen_pred(model, data, comstok, comlen, batchsize):
         for c, s in enumerate(results):
             coms[c][i] = np.argmax(s)
 
-    final_data = {}
-    for fid, com in zip(data.keys(), coms):
-        final_data[fid] = seq2sent(com, comstok)
-
-    return final_data
+    return coms
 
 
 if __name__ == '__main__':
@@ -109,29 +107,58 @@ if __name__ == '__main__':
     comstart = np.zeros(config['comlen'])
     stk = vocab.nl2index['<SOS>']
     comstart[0] = stk
-    outfn = outdir + "/predictions/predict-{}.txt".format(modeltype)
-    outf = open(outfn, 'w')
+    outfn = outdir + "/predictions/predict-{}.json".format(modeltype)
     print("writing to file: " + outfn)
     batch_sets = [test_ids[i:i + batchsize] for i in range(0, len(test_ids), batchsize)]
 
     input_nl_data = dict()
 
+    hypotheses = dict()
+    references = dict()
+
     for c, fid_set in enumerate(batch_sets):
         st = timer()
+        batch_references = []
         for fid in fid_set:
-            input_nl_data[fid] = comstart  # np.asarray([stk])
+            input_nl_data[fid] = comstart
+            batch_references.append(test_nl[fid][:config['comlen']-2])
 
         bg = BatchGen(config, 'test', test_code_data, test_ast_data, input_nl_data, test_edges, vocab)
         batch = bg.make_batch(fid_set)
 
         batch_results = gen_pred(model, batch, vocab.nl2index, config['comlen'], len(fid_set))
 
-        for key, val in batch_results.items():
-            outf.write("{}\t{}\n".format(key, val))
+        for i in batch_results.shape(0):
+            result = batch_results[i]
+            candidate = [vocab.index2nl[c] for c in result]
+
+            if '<EOS>' in candidate and candidate.index('<EOS>') < len(candidate):
+                candidate = candidate[:candidate.index('<EOS>')]
+
+            candidate_str = ' '.join(candidate)
+            reference_str = ' '.join(batch_references[i])
+
+            hypotheses[i] = [candidate_str]
+            references[i] = [reference_str]
 
         end = timer()
         print("{} processed, {} per second this batch".format((c + 1) * batchsize, int(batchsize / (end - st))),
               end='\r')
 
-    outf.close()
+    bleu, rougle_l, meteor, precision, \
+    recall, f1, ind_bleu, ind_rouge = eval_accuracies(hypotheses, references)
+
+    print('bleu: ', bleu, ', rouge: ', rougle_l, 'meteor: ', meteor, 'precision: ', precision,
+          'recall: ', recall, 'f1: ', f1)
+
+    outputs = []
+    for i in hypotheses.keys():
+        outputs.append({
+            'predict': hypotheses[i][0],
+            'true': references[i][0],
+            'bleu': ind_bleu[i],
+            'rouge': ind_rouge[i]
+        })
+    with open(outfn, 'w') as f:
+        json.dump(outputs, f)
 

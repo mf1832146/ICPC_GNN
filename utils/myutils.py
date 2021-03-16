@@ -21,22 +21,6 @@ def init_tf(gpu):
         tf.config.experimental.set_memory_growth(gpu, True)
 
 
-def index2word(tok):
-    i2w = {}
-    for word, index in tok.items():
-        i2w[index] = word
-    return i2w
-
-
-def seq2sent(seq, tokenizer):
-    sent = []
-    check = index2word(tokenizer)
-    for i in seq:
-        sent.append(check[i])
-
-    return ' '.join(sent)
-
-
 def load_ast(file_path):
     _data = []
     with open(file_path, 'r', encoding='utf-8') as f:
