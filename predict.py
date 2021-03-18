@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('model', type=str, default=None)
-    parser.add_argument('--modeltype', dest='modeltype', type=str, default=None)
+    parser.add_argument('--modeltype', dest='modeltype', type=str, default='codegnnbilstm')
     parser.add_argument('--gpu', dest='gpu', type=str, default='')
     parser.add_argument('--data', dest='dataprep', type=str, default='../data')
     parser.add_argument('--outdir', dest='outdir', type=str, default='modelout/')
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     # ast seq len
     config['maxastnodes'] = 100
     # comment seq len
-    config['comlen'] = 50
+    config['comlen'] = 30
     config['batch_size'] = batchsize
 
     config, _ = create_model(modeltype, config)
