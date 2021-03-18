@@ -129,6 +129,7 @@ if __name__ == '__main__':
         batch_results = gen_pred(model, batch, vocab.nl2index, config['comlen'], len(fid_set))
 
         for i in batch_results.shape[0]:
+            # this is test.
             result = batch_results[i]
             candidate = [vocab.index2nl[c] for c in result]
 
